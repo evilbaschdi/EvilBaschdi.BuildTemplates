@@ -1,8 +1,9 @@
 parameters:
 - name: 'projectName'
   type: string
+
 jobs:
-- job: Pack
+- job: BuildNPack
   pool:
     name: Hosted Windows 2019 with VS2019
 
