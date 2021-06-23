@@ -1,69 +1,68 @@
 parameters:
-- name: 'mainProject'
+- name: 'projectName'
   type: string
-- name: 'testProject'
-  type: string
+jobs:
+- job: Pack
+  pool:
+    name: Hosted Windows 2019 with VS2019
 
-pool:
-  name: Hosted Windows 2019 with VS2019
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .Net Core sdk from global.json'
+    inputs:
+      useGlobalJson: true
 
-steps:
-- task: UseDotNet@2
-  displayName: 'Use .Net Core sdk from global.json'
-  inputs:
-    useGlobalJson: true
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: restore
+      projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet restore'
-  inputs:
-    command: restore
-    projects: EvilBaschdi.Core/EvilBaschdi.Core.csproj
-    feedsToUse: config
-    nugetConfigPath: NuGet.config
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      arguments: '--configuration $(BuildConfiguration)'
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet build'
-  inputs:
-    projects: EvilBaschdi.Core/EvilBaschdi.Core.csproj
-    arguments: '--configuration $(BuildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
+    inputs:
+      command: test
+      projects: ${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
+      arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
+    continueOnError: true
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet test'
-  inputs:
-    command: test
-    projects: EvilBaschdi.Core.Tests/EvilBaschdi.Core.Tests.csproj
-    arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
-  continueOnError: true
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet pack main'
+    inputs:
+      command: pack
+      packagesToPack: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      nobuild: true
+    enabled: false
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet pack main'
-  inputs:
-    command: pack
-    packagesToPack: EvilBaschdi.Core/EvilBaschdi.Core.csproj
-    nobuild: true
-  enabled: false
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet custom pack main'
+    inputs:
+      command: custom
+      projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      custom: pack
+      arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet custom pack main'
-  inputs:
-    command: custom
-    projects: EvilBaschdi.Core/EvilBaschdi.Core.csproj
-    custom: pack
-    arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build'
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet custom pack not main'
+    inputs:
+      command: custom
+      projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      custom: pack
+      arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)'
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet custom pack not main'
-  inputs:
-    command: custom
-    projects: EvilBaschdi.Core/EvilBaschdi.Core.csproj
-    custom: pack
-    arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)'
-  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: Nuget-Package'
-  inputs:
-    ArtifactName: 'Nuget-Package'
-  condition: succeededOrFailed()
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: Nuget-Package'
+    inputs:
+      ArtifactName: 'Nuget-Package'
+    condition: succeededOrFailed()
