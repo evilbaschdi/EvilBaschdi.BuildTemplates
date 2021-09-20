@@ -5,7 +5,7 @@ parameters:
 jobs:
 - job: BuildNPack
   pool:
-    name: Hosted Windows 2019 with VS2019
+    vmImage: windows-latest
 
   steps:
   - task: UseDotNet@2
@@ -35,14 +35,10 @@ jobs:
       arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
     continueOnError: true
 
-  - task: DotNetCoreCLI@2
-    displayName: 'dotnet pack main'
+  - task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
+    displayName: 'Automated code quality checks'
     inputs:
-      command: pack
-      packagesToPack: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-      nobuild: true
-    enabled: false
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet custom pack main'
