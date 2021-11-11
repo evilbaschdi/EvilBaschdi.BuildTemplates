@@ -35,10 +35,10 @@ jobs:
       arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
     continueOnError: true
 
-  - task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
-    displayName: 'Automated code quality checks'
-    inputs:
-      solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+  #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
+  #  displayName: 'Automated code quality checks'
+  #  inputs:
+  #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet custom pack main'
