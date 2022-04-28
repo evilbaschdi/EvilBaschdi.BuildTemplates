@@ -14,6 +14,10 @@ jobs:
     pool:
       vmImage: windows-2022
 
+    variables:
+      buildPlatform: "Any CPU"
+      buildConfiguration: "Release"
+
     steps:
       - task: UseDotNet@2
         displayName: "Use .Net Core sdk from global.json"
@@ -39,7 +43,7 @@ jobs:
         inputs:
           command: test
           projects: ${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
+          arguments: '--configuration $(BuildConfiguration) --collect "Code coverage"'
         continueOnError: true
 
       #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
@@ -48,25 +52,17 @@ jobs:
       #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet custom publish main"
+        displayName: 'dotnet publish'
         inputs:
-          command: custom
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          custom: publish
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --framework ${{ parameters.framework }} --self-contained false --no-build"
-        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet custom publish not main"
-        inputs:
-          command: custom
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          custom: publish
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --framework ${{ parameters.framework }} --self-contained false --no-build --version-suffix $(Build.SourceBranchName)"
-        condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+          command: 'publish'
+          publishWebProjects: false
+          projects: '${{ parameters.projectName }}/${{ parameters.projectName }}.csproj'
+          arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory)/Output --framework ${{ parameters.framework }} --self-contained false --no-build'
+          zipAfterPublish: true
+          modifyOutputPath: true
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: Nuget-Package"
+        displayName: "Publish Artifact: ZipArchive"
         inputs:
-          ArtifactName: "Nuget-Package"
+          ArtifactName: "ZipArchive"
         condition: succeededOrFailed()
