@@ -32,7 +32,7 @@ jobs:
     inputs:
       command: test
       projects: ${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-      arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
+      arguments: '--configuration $(BuildConfiguration) --collect "Code coverage"'
     continueOnError: true
 
   #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
