@@ -2,7 +2,6 @@ parameters:
   - name: "projectName"
     type: string
   - name: "projectParentDirectory"
-    default: ${{ parameters.projectName }}
     type: string
 
 jobs:
@@ -24,34 +23,34 @@ jobs:
         displayName: "dotnet restore"
         inputs:
           command: restore
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+          projects: ${{ parameters.projectParentDirectory }}/${{ parameters.projectName }}.csproj
           feedsToUse: config
           nugetConfigPath: NuGet.config
 
       - task: DotNetCoreCLI@2
         displayName: "dotnet build"
         inputs:
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+          projects: ${{ parameters.projectParentDirectory }}/${{ parameters.projectName }}.csproj
           arguments: "--configuration $(BuildConfiguration)"
 
       - task: DotNetCoreCLI@2
         displayName: "dotnet test"
         inputs:
           command: test
-          projects: ${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
+          projects: ${{ parameters.projectParentDirectory }}.Tests/${{ parameters.projectName }}.Tests.csproj
           arguments: '--configuration $(BuildConfiguration) --collect "Code coverage"'
         continueOnError: true
 
       #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
       #  displayName: 'Automated code quality checks'
       #  inputs:
-      #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      #    solutionOrProjectPath: ${{ parameters.projectParentDirectory }}/${{ parameters.projectName }}.csproj
 
       - task: DotNetCoreCLI@2
         displayName: "dotnet custom pack main"
         inputs:
           command: custom
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+          projects: ${{ parameters.projectParentDirectory }}/${{ parameters.projectName }}.csproj
           custom: pack
           arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
@@ -60,7 +59,7 @@ jobs:
         displayName: "dotnet custom pack not main"
         inputs:
           command: custom
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+          projects: ${{ parameters.projectParentDirectory }}/${{ parameters.projectName }}.csproj
           custom: pack
           arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
