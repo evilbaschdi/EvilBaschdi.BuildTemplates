@@ -1,6 +1,9 @@
 parameters:
   - name: "projectName"
     type: string
+  - name: "projectParentDirectory"
+    default: ${{ parameters.projectName }}
+    type: string
 
 jobs:
   - job: BuildNPack
