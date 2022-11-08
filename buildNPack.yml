@@ -38,7 +38,8 @@ jobs:
         inputs:
           command: test
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) --collect "Code coverage"'
+          arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+          publishTestResults: true
         continueOnError: true
 
       #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
@@ -63,6 +64,12 @@ jobs:
           custom: pack
           arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+      - task: PublishCodeCoverageResults@1
+        displayName: 'Publish code coverage report'
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: Nuget-Package"
