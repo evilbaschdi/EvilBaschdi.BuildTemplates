@@ -1,7 +1,7 @@
 parameters:
-  - name: "projectName"
+  - name: 'projectName'
     type: string
-  - name: "projectParentDirectory"
+  - name: 'projectParentDirectory'
     type: string
 
 jobs:
@@ -10,17 +10,17 @@ jobs:
       vmImage: windows-2022
 
       variables:
-        buildPlatform: "Any CPU"
-        buildConfiguration: "Release"
+        buildPlatform: 'Any CPU'
+        buildConfiguration: 'Release'
 
     steps:
       - task: UseDotNet@2
-        displayName: "Use .Net Core sdk from global.json"
+        displayName: 'Use .Net Core sdk from global.json'
         inputs:
           useGlobalJson: true
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet restore"
+        displayName: 'dotnet restore'
         inputs:
           command: restore
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
@@ -28,13 +28,13 @@ jobs:
           nugetConfigPath: ${{ parameters.projectParentDirectory }}NuGet.config
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet build"
+        displayName: 'dotnet build'
         inputs:
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          arguments: "--configuration $(BuildConfiguration)"
+          arguments: '--configuration $(BuildConfiguration)'
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet test"
+        displayName: 'dotnet test'
         inputs:
           command: test
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
@@ -42,27 +42,22 @@ jobs:
           publishTestResults: true
         continueOnError: true
 
-      #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
-      #  displayName: 'Automated code quality checks'
-      #  inputs:
-      #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-
       - task: DotNetCoreCLI@2
-        displayName: "dotnet custom pack main"
+        displayName: 'dotnet custom pack main'
         inputs:
           command: custom
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
           custom: pack
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
+          arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build'
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet custom pack not main"
+        displayName: 'dotnet custom pack not main'
         inputs:
           command: custom
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
           custom: pack
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
+          arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)'
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       - task: PublishCodeCoverageResults@1
@@ -72,7 +67,7 @@ jobs:
           summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: Nuget-Package"
+        displayName: 'Publish Artifact: Nuget-Package'
         inputs:
-          ArtifactName: "Nuget-Package"
+          ArtifactName: 'Nuget-Package'
         condition: succeededOrFailed()
