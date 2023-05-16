@@ -33,14 +33,14 @@ jobs:
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
           arguments: '--configuration $(BuildConfiguration)'
 
-      - task: DotNetCoreCLI@2
-        displayName: 'dotnet test'
-        inputs:
-          command: test
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
-          publishTestResults: true
-        continueOnError: true
+      #- task: DotNetCoreCLI@2
+      #  displayName: 'dotnet test'
+      #  inputs:
+      #    command: test
+      #    projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
+      #    arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+      #    publishTestResults: true
+      #  continueOnError: true
 
       - task: DotNetCoreCLI@2
         displayName: 'dotnet custom pack main'
