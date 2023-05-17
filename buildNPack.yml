@@ -37,8 +37,8 @@ jobs:
         displayName: "dotnet test"
         inputs:
           command: test
-          projects: ${{ parameters.projectParentDirectory }}/*.sln
-          arguments: '--configuration $(BuildConfiguration) -s ${{ parameters.projectParentDirectory }}/.runsettings --no-restore --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+          projects: $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}*.sln
+          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --no-restore --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
           publishTestResults: true
         continueOnError: true
 
