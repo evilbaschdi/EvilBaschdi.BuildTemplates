@@ -18,6 +18,7 @@ jobs:
         displayName: "Use .Net Core sdk from global.json"
         inputs:
           useGlobalJson: true
+          includePreviewVersions: true
 
       - task: DotNetCoreCLI@2
         displayName: "dotnet restore"

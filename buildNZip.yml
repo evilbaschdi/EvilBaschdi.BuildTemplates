@@ -8,6 +8,8 @@ parameters:
       - net6.0-windows
       - net7.0
       - net7.0-windows
+      - net8.0
+      - net8.0-windows
 
 jobs:
   - job: BuildNZip
@@ -53,20 +55,20 @@ jobs:
       #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
 
       - task: DotNetCoreCLI@2
-        displayName: 'dotnet publish'
+        displayName: "dotnet publish"
         inputs:
-          command: 'publish'
+          command: "publish"
           publishWebProjects: false
-          projects: '${{ parameters.projectName }}/${{ parameters.projectName }}.csproj'
-          arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory)/Output --framework ${{ parameters.framework }} --self-contained false --no-build'
+          projects: "${{ parameters.projectName }}/${{ parameters.projectName }}.csproj"
+          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory)/Output --framework ${{ parameters.framework }} --self-contained false --no-build"
           zipAfterPublish: true
           modifyOutputPath: true
 
       - task: PublishCodeCoverageResults@1
-        displayName: 'Publish code coverage report'
+        displayName: "Publish code coverage report"
         inputs:
-          codeCoverageTool: 'Cobertura'
-          summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+          codeCoverageTool: "Cobertura"
+          summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: ZipArchive"
