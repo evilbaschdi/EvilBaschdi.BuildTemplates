@@ -4,17 +4,15 @@ parameters:
   - name: "framework"
     type: string
     values:
-      - net6.0
-      - net6.0-windows
-      - net7.0
-      - net7.0-windows
       - net8.0
       - net8.0-windows
+      - net9.0
+      - net9.0-windows
 
 jobs:
   - job: BuildNZip
     pool:
-      vmImage: windows-2022
+      vmImage: windows-latest
 
     variables:
       buildPlatform: "Any CPU"
@@ -64,10 +62,9 @@ jobs:
           zipAfterPublish: true
           modifyOutputPath: true
 
-      - task: PublishCodeCoverageResults@1
+      - task: PublishCodeCoverageResults@2
         displayName: "Publish code coverage report"
         inputs:
-          codeCoverageTool: "Cobertura"
           summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1

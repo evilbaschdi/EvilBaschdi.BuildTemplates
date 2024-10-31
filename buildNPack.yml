@@ -7,7 +7,7 @@ parameters:
 jobs:
   - job: BuildNPack
     pool:
-      vmImage: windows-2022
+      vmImage: windows-latest
 
     variables:
       buildPlatform: "Any CPU"
@@ -61,10 +61,9 @@ jobs:
           arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-      - task: PublishCodeCoverageResults@1
+      - task: PublishCodeCoverageResults@2
         displayName: "Publish code coverage report"
         inputs:
-          codeCoverageTool: "Cobertura"
           summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
