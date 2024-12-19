@@ -39,7 +39,7 @@ jobs:
         inputs:
           command: test
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --no-restore --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
           publishTestResults: true
         continueOnError: true
 
@@ -64,7 +64,6 @@ jobs:
       - task: PublishCodeCoverageResults@2
         displayName: "Publish code coverage report"
         inputs:
-          codeCoverageTool: "Cobertura"
           summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
