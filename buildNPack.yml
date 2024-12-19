@@ -1,6 +1,13 @@
 parameters:
   - name: "projectName"
     type: string
+  - name: "framework"
+    type: string
+    values:
+      - net8.0
+      - net8.0-windows
+      - net9.0
+      - net9.0-windows
   - name: "projectParentDirectory"
     type: string
 
@@ -39,7 +46,7 @@ jobs:
         inputs:
           command: test
           projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --no-restore --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --framework ${{ parameters.framework }} --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
           publishTestResults: true
         continueOnError: true
 
