@@ -65,6 +65,7 @@ jobs:
       - task: PublishCodeCoverageResults@2
         displayName: "Publish code coverage report"
         inputs:
+          codeCoverageTool: "Cobertura"
           summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
