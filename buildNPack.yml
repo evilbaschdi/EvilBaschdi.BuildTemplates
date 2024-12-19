@@ -38,7 +38,7 @@ jobs:
         displayName: "dotnet test"
         inputs:
           command: test
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.Tests.csproj
+          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
           arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
           publishTestResults: true
         continueOnError: true
