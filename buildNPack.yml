@@ -14,7 +14,7 @@ parameters:
 jobs:
   - job: BuildNPack
     pool:
-      vmImage: windows-latest
+      name: x-agentpool
 
     variables:
       buildPlatform: "Any CPU"
