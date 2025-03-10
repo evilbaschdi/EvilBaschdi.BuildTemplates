@@ -11,15 +11,13 @@ parameters:
   - name: "projectParentDirectory"
     type: string
 
-variables:
-  - group: BuildOptions
-
 jobs:
   - job: BuildNPack
     pool:
       name: x-agentpool
 
     variables:
+      - group: BuildOptions
       buildPlatform: "Any CPU"
       buildConfiguration: "Release"
 
