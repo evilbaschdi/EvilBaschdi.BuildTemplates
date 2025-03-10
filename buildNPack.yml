@@ -17,9 +17,8 @@ jobs:
       name: x-agentpool
 
     variables:
-      - group: BuildOptions
-      buildPlatform: "Any CPU"
-      buildConfiguration: "Release"
+      BuildPlatform: "Any CPU"
+      BuildConfiguration: "Release"
 
     steps:
       - task: UseDotNet@2
