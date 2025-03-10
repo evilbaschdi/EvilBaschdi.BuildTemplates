@@ -11,6 +11,9 @@ parameters:
   - name: "projectParentDirectory"
     type: string
 
+variables:
+  - group: BuildOptions
+
 jobs:
   - job: BuildNPack
     pool:
