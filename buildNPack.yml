@@ -15,7 +15,6 @@ jobs:
   - job: BuildNPack
     pool:
       name: x-agentpool
-
     variables:
       buildPlatform: "Any CPU"
       buildConfiguration: "Release"
