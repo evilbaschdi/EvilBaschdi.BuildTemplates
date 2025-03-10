@@ -15,10 +15,9 @@ jobs:
   - job: BuildNPack
     pool:
       name: x-agentpool
-
     variables:
-      BuildPlatform: "Any CPU"
-      BuildConfiguration: "Release"
+      buildPlatform: "Any CPU"
+      buildConfiguration: "Release"
 
     steps:
       - task: UseDotNet@2
