@@ -1,0 +1,26 @@
+jobs:
+  - job: BuildNPack
+    pool:
+      name: x-agentpool
+
+    steps:
+      - task: UseDotNet@2
+        displayName: "Use .Net Core sdk from global.json"
+        inputs:
+          useGlobalJson: true
+          includePreviewVersions: true
+
+      - task: DotNetCoreCLI@2
+        displayName: "dotnet push evilfeed"
+        inputs:
+          command: push
+          packagesToPush: "$(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg"
+          publishVstsFeed: "652346b9-9a10-49f8-a49a-f79b3ec66045"
+
+      - task: DotNetCoreCLI@2
+        displayName: "dotnet push MyGet"
+        inputs:
+          command: push
+          packagesToPush: "$(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg"
+          nuGetFeedType: external
+          publishFeedCredentials: "myGet Feed"

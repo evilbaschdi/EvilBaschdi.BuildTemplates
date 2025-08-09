@@ -8,6 +8,8 @@ parameters:
       - net8.0-windows
       - net9.0
       - net9.0-windows
+      - net10.0
+      - net10.0-windows
   - name: "projectParentDirectory"
     type: string
 
@@ -68,9 +70,9 @@ jobs:
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       #- task: PublishCodeCoverageResults@2
-       # displayName: "Publish code coverage report"
-        #inputs:
-         # summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
+      # displayName: "Publish code coverage report"
+      #inputs:
+      # summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: Nuget-Package"
