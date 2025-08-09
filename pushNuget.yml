@@ -34,5 +34,5 @@ jobs:
         inputs:
           command: custom
           custom: nuget
-          arguments: 'push $(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg --api-key $(MyGet ApiKey) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json'
+          arguments: 'push $(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json'
         continueOnError: true
