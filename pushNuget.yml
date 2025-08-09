@@ -3,12 +3,9 @@ jobs:
     pool:
       name: x-agentpool
     variables:
-      buildPlatform: "Any CPU"
-      buildConfiguration: "Release"
+      - group: ApiKeys
 
     steps:
-      variables:
-      - group: ApiKeys
       - task: DownloadPipelineArtifact@2
         displayName: "Download Nuget-Package Artifact"
         inputs:
@@ -30,9 +27,9 @@ jobs:
         continueOnError: true
 
       - task: DotNetCoreCLI@2
-        displayName: 'dotnet push MyGet'
+        displayName: "dotnet push MyGet"
         inputs:
           command: custom
           custom: nuget
-          arguments: 'push $(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json'
+          arguments: "push $(Pipeline.Workspace)/Nuget-Package/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json"
         continueOnError: true
