@@ -15,7 +15,7 @@ parameters:
 
 stages:
   - stage: Build
-    displayName: "Build n Pack ${{ variables['Build.SourceBranch'] }}"
+    displayName: "Build n Pack ${{ replace(variables['Build.SourceBranch'], 'refs/heads/', '') }}"
     jobs:
       - template: buildNPack.yml
         parameters:
@@ -24,7 +24,7 @@ stages:
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
   - stage: Deploy
-    displayName: "Deploy ${{ variables['Build.SourceBranch'] }}"
+    displayName: "Deploy ${{ replace(variables['Build.SourceBranch'], 'refs/heads/', '') }}"
     dependsOn: Build
     jobs:
       - template: pushNuget.yml
