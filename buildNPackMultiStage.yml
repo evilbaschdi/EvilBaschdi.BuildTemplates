@@ -1,7 +1,7 @@
 parameters:
-  - name: "projectName"
+  - name: projectName
     type: string
-  - name: "framework"
+  - name: framework
     type: string
     values:
       - net8.0
@@ -10,7 +10,7 @@ parameters:
       - net9.0-windows
       - net10.0
       - net10.0-windows
-  - name: "projectParentDirectory"
+  - name: projectParentDirectory
     type: string
 
 stages:
