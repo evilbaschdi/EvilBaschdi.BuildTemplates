@@ -7,6 +7,8 @@ jobs:
       buildConfiguration: "Release"
 
     steps:
+      variables:
+      - group: ApiKeys
       - task: DownloadPipelineArtifact@2
         displayName: "Download Nuget-Package Artifact"
         inputs:
@@ -28,10 +30,9 @@ jobs:
         continueOnError: true
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet push MyGet"
+        displayName: 'dotnet push MyGet'
         inputs:
-          command: push
-          packagesToPush: "$(Pipeline.Workspace)/Nuget-Package/*.nupkg"
-          nuGetFeedType: external
-          publishFeedCredentials: "myGet Feed"
+          command: custom
+          custom: nuget
+          arguments: 'push $(System.DefaultWorkingDirectory)/*/Nuget-Package/*.nupkg --api-key $(MyGet ApiKey) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json'
         continueOnError: true
