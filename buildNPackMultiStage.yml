@@ -1,7 +1,7 @@
 parameters:
-  - name: projectName
+  - name: "projectName"
     type: string
-  - name: framework
+  - name: "framework"
     type: string
     values:
       - net8.0
@@ -10,31 +10,45 @@ parameters:
       - net9.0-windows
       - net10.0
       - net10.0-windows
-  - name: projectParentDirectory
+  - name: "projectParentDirectory"
     type: string
 
-jobs:
-  - job: Build
+stages:
+  - stage: Build
     displayName: "Build n Pack"
-    steps:
-      - template: buildNPack.yml
+    jobs:
+      - template: BuildNPack.yml
         parameters:
           projectName: ${{ parameters.projectName }}
           framework: ${{ parameters.framework }}
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
-  - job: DeployPrerelease
+  - stage: DeployPrerelease
     displayName: "Deploy Prerelease"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-    steps:
-      - download: current
-        artifact: Nuget-Package
-      - template: pushNuget.yml
+    dependsOn: Build
+    jobs:
+      - deployment: PushNuget
+        environment: develop
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: Nuget-Package
+                - template: pushNuget.yml
 
-  - job: DeployRelease
+  - stage: DeployRelease
     displayName: "Deploy Release"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-    steps:
-      - download: current
-        artifact: Nuget-Package
-      - template: pushNuget.yml
+    dependsOn: Build
+    jobs:
+      - deployment: PushNuget
+        environment: main
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: Nuget-Package
+                - template: pushNuget.yml
