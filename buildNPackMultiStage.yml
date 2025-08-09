@@ -25,7 +25,6 @@ stages:
 
   - stage: Deploy
     displayName: "Deploy ${{ variables['Build.SourceBranch'] }}"
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     dependsOn: Build
     jobs:
       - template: pushNuget.yml
