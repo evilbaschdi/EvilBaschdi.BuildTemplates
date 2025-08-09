@@ -15,7 +15,7 @@ parameters:
 
 stages:
   - stage: Build
-    displayName: "Build n Pack"
+    displayName: "Build n Pack ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') && 'Deploy Release' || 'Deploy Prerelease' }}"
     jobs:
       - template: buildNPack.yml
         parameters:
@@ -23,16 +23,9 @@ stages:
           framework: ${{ parameters.framework }}
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
-  - stage: DeployPrerelease
-    displayName: "Deploy Prerelease"
+  - stage: Deploy
+    displayName: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') && 'Deploy Release' || 'Deploy Prerelease' }}
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-    dependsOn: Build
-    jobs:
-      - template: pushNuget.yml
-
-  - stage: DeployRelease
-    displayName: "Deploy Release"
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     dependsOn: Build
     jobs:
       - template: pushNuget.yml
