@@ -15,7 +15,7 @@ parameters:
 
 stages:
   - stage: Build
-    displayName: "Build n Pack ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') && 'Deploy Release' || 'Deploy Prerelease' }}"
+    displayName: "Build n Pack ${{ variables['Build.SourceBranch'] }}"
     jobs:
       - template: buildNPack.yml
         parameters:
@@ -24,7 +24,7 @@ stages:
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
   - stage: Deploy
-    displayName: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') && 'Deploy Release' || 'Deploy Prerelease' }}
+    displayName: "Deploy ${{ variables['Build.SourceBranch'] }}"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     dependsOn: Build
     jobs:
