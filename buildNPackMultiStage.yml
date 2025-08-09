@@ -26,29 +26,17 @@ stages:
   - stage: DeployPrerelease
     displayName: "Deploy Prerelease"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    environment: develop
     dependsOn: Build
     jobs:
-      - deployment: PushNuget
+      - template: pushNuget.yml
         environment: develop
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - download: current
-                  artifact: Nuget-Package
-                - template: pushNuget.yml
 
   - stage: DeployRelease
     displayName: "Deploy Release"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    environment: main
     dependsOn: Build
     jobs:
-      - deployment: PushNuget
+      - template: pushNuget.yml
         environment: main
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - download: current
-                  artifact: Nuget-Package
-                - template: pushNuget.yml
