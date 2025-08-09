@@ -26,17 +26,13 @@ stages:
   - stage: DeployPrerelease
     displayName: "Deploy Prerelease"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-    environment: develop
     dependsOn: Build
     jobs:
       - template: pushNuget.yml
-        environment: develop
 
   - stage: DeployRelease
     displayName: "Deploy Release"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-    environment: main
     dependsOn: Build
     jobs:
       - template: pushNuget.yml
-        environment: main
