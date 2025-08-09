@@ -19,7 +19,7 @@ stages:
     jobs:
       - template: BuildNPack.yml
         parameters:
-          projects: ${{ parameters.projectName }}
+          projectName: ${{ parameters.projectName }}
           framework: ${{ parameters.framework }}
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
