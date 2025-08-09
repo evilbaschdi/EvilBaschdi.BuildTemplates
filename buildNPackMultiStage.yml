@@ -17,7 +17,7 @@ jobs:
   - job: Build
     displayName: "Build n Pack"
     steps:
-      - template: BuildNPack.yml
+      - template: buildNPack.yml
         parameters:
           projectName: ${{ parameters.projectName }}
           framework: ${{ parameters.framework }}
