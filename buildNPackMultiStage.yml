@@ -13,42 +13,28 @@ parameters:
   - name: projectParentDirectory
     type: string
 
-stages:
-  - stage: Build
+jobs:
+  - job: Build
     displayName: "Build n Pack"
-    jobs:
+    steps:
       - template: BuildNPack.yml
         parameters:
           projectName: ${{ parameters.projectName }}
           framework: ${{ parameters.framework }}
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
-  - stage: DeployPrerelease
+  - job: DeployPrerelease
     displayName: "Deploy Prerelease"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-    dependsOn: Build
-    jobs:
-      - deployment: PushNuget
-        environment: develop
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - download: current
-                  artifact: Nuget-Package
-                - template: pushNuget.yml
+    steps:
+      - download: current
+        artifact: Nuget-Package
+      - template: pushNuget.yml
 
-  - stage: DeployRelease
+  - job: DeployRelease
     displayName: "Deploy Release"
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-    dependsOn: Build
-    jobs:
-      - deployment: PushNuget
-        environment: main
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - download: current
-                  artifact: Nuget-Package
-                - template: pushNuget.yml
+    steps:
+      - download: current
+        artifact: Nuget-Package
+      - template: pushNuget.yml
