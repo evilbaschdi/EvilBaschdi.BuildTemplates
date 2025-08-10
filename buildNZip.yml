@@ -12,8 +12,9 @@ parameters:
 jobs:
   - job: BuildNZip
     pool:
-      vmImage: windows-latest
-
+      name: x-agentpool
+    workspace:
+      clean: all
     variables:
       buildPlatform: "Any CPU"
       buildConfiguration: "Release"
