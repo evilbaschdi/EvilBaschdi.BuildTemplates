@@ -77,7 +77,7 @@ jobs:
       # summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: Nuget-Package"
+        displayName: "Publish Artifact: $(Build.SourceBranchName)"
         inputs:
-          ArtifactName: "Nuget-Package"
+          ArtifactName: "$(Build.SourceBranchName)"
         condition: succeededOrFailed()

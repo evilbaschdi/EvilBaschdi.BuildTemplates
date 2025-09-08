@@ -7,10 +7,10 @@ jobs:
 
     steps:
       - task: DownloadPipelineArtifact@2
-        displayName: "Download Nuget-Package Artifact"
+        displayName: "Download $(Build.SourceBranchName) Artifact"
         inputs:
-          artifact: "Nuget-Package"
-          path: "$(Pipeline.Workspace)/Nuget-Package"
+          artifact: "$(Build.SourceBranchName)"
+          path: "$(Pipeline.Workspace)/$(Build.SourceBranchName)"
 
       - task: UseDotNet@2
         displayName: "Use .Net Core sdk from global.json"
@@ -22,7 +22,7 @@ jobs:
         displayName: "dotnet push evilfeed"
         inputs:
           command: push
-          packagesToPush: "$(Pipeline.Workspace)/Nuget-Package/*.nupkg"
+          packagesToPush: "$(Pipeline.Workspace)/$(Build.SourceBranchName)/*.nupkg"
           publishVstsFeed: "652346b9-9a10-49f8-a49a-f79b3ec66045"
         continueOnError: true
 
@@ -31,5 +31,5 @@ jobs:
         inputs:
           command: custom
           custom: nuget
-          arguments: "push $(Pipeline.Workspace)/Nuget-Package/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json"
+          arguments: "push $(Pipeline.Workspace)/$(Build.SourceBranchName)/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json"
         continueOnError: true
