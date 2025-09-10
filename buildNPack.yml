@@ -27,6 +27,7 @@ jobs:
       - task: UseDotNet@2
         displayName: "Use .Net Core sdk from global.json"
         inputs:
+          packageType: "sdk"
           useGlobalJson: true
           includePreviewVersions: true
 
