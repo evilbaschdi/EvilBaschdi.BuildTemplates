@@ -32,6 +32,5 @@ jobs:
           command: push
           packagesToPush: "$(Pipeline.Workspace)/$(Build.SourceBranchName)/*.nupkg"
           nuGetFeedType: external
-          publishFeedCredentials: $(MyGet)
-          publishFeedUrl: "https://www.myget.org/F/evilbaschdi/api/v3/index.json"
+          arguments: "--api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json"
         continueOnError: true
