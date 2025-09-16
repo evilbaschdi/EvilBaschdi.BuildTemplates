@@ -29,7 +29,9 @@ jobs:
       - task: DotNetCoreCLI@2
         displayName: "dotnet push MyGet"
         inputs:
-          command: custom
-          custom: nuget
-          arguments: "push $(Pipeline.Workspace)/$(Build.SourceBranchName)/*.nupkg --api-key $(MyGet) --source https://www.myget.org/F/evilbaschdi/api/v3/index.json"
+          command: push
+          packagesToPush: "$(Pipeline.Workspace)/$(Build.SourceBranchName)/*.nupkg"
+          nuGetFeedType: external
+          publishFeedCredentials: $(MyGet)
+          publishFeedUrl: "https://www.myget.org/F/evilbaschdi/api/v3/index.json"
         continueOnError: true

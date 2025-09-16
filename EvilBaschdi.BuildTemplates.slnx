@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="azureDevOps.yml" />
+    <File Path="buildNPack.yml" />
+    <File Path="buildNPackMultiStage.yml" />
+    <File Path="buildNZip.yml" />
+    <File Path="pushNuget.yml" />
+  </Folder>
+</Solution>
