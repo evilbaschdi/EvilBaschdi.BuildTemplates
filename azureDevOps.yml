@@ -54,7 +54,7 @@ jobs:
           arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
         condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-      - task: PublishCodeCoverageResults@
+      - task: PublishCodeCoverageResults@2
         displayName: "Publish code coverage report"
         inputs:
           summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
