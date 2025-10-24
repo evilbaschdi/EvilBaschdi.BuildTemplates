@@ -26,37 +26,34 @@ jobs:
           publishVstsFeed: "652346b9-9a10-49f8-a49a-f79b3ec66045"
         continueOnError: true
 
-      - task: PowerShell@2
+      - task: Bash@3
         displayName: "dotnet push MyGet"
         inputs:
           targetType: "inline"
           script: |
-            $packagePath = "$(Pipeline.Workspace)/$(Build.SourceBranchName)"
-            Write-Host "Looking for packages in: $packagePath"
+            packagePath="$(Pipeline.Workspace)/$(Build.SourceBranchName)"
+            echo "Looking for packages in: $packagePath"
 
-            # Get all .nupkg files
-            $packages = Get-ChildItem -Path $packagePath -Filter "*.nupkg" -File
+            # Find all .nupkg files
+            packages=$(find "$packagePath" -name "*.nupkg" -type f)
 
-            if ($packages.Count -eq 0) {
-              Write-Host "No .nupkg files found in $packagePath"
+            if [ -z "$packages" ]; then
+              echo "No .nupkg files found in $packagePath"
               exit 0
-            }
+            fi
 
-            Write-Host "Found $($packages.Count) package(s) to push:"
-            $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
+            echo "Found packages to push:"
+            echo "$packages"
 
             # Push each package individually
-            foreach ($package in $packages) {
-              Write-Host "Pushing package: $($package.Name)"
-              $fullPath = $package.FullName
+            for package in $packages; do
+              echo "Pushing package: $(basename "$package")"
+              dotnet nuget push "$package" --api-key "$(MyGet)" --source "https://www.myget.org/F/evilbaschdi/api/v3/index.json" --skip-duplicate
 
-              # Use dotnet nuget push with the full path to the package
-              & dotnet nuget push "$fullPath" --api-key "$(MyGet)" --source "https://www.myget.org/F/evilbaschdi/api/v3/index.json" --skip-duplicate
-
-              if ($LASTEXITCODE -ne 0) {
-                Write-Warning "Failed to push $($package.Name), but continuing with other packages..."
-              } else {
-                Write-Host "Successfully pushed $($package.Name)"
-              }
-            }
+              if [ $? -ne 0 ]; then
+                echo "Warning: Failed to push $(basename "$package"), but continuing with other packages..."
+              else
+                echo "Successfully pushed $(basename "$package")"
+              fi
+            done
         continueOnError: true
