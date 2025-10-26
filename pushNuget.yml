@@ -32,7 +32,6 @@ jobs:
           targetType: "inline"
           script: |
             packagePath="$(Pipeline.Workspace)/$(Build.SourceBranchName)"
-            echo "Looking for packages in: $packagePath"
 
             # Find all .nupkg files
             packages=$(find "$packagePath" -name "*.nupkg" -type f)
@@ -47,13 +46,7 @@ jobs:
 
             # Push each package individually
             for package in $packages; do
-              echo "Pushing package: $(basename "$package")"
-              dotnet nuget push "$package" --api-key "$(MyGet)" --source "https://www.myget.org/F/evilbaschdi/api/v3/index.json" --skip-duplicate
-
-              if [ $? -ne 0 ]; then
-                echo "Warning: Failed to push $(basename "$package"), but continuing with other packages..."
-              else
-                echo "Successfully pushed $(basename "$package")"
-              fi
+              dotnet nuget push "$package" --api-key "$(MyGet)" --source "https://www.myget.org/F/evilbaschdi/api/v3/index.json"
+              echo ""
             done
         continueOnError: true
