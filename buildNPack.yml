@@ -1,6 +1,7 @@
 parameters:
-  - name: "projectName"
-    type: string
+  - name: "projects"
+    type: object
+    default: []
   - name: "framework"
     type: string
     values:
@@ -31,46 +32,47 @@ jobs:
           useGlobalJson: true
           includePreviewVersions: true
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet restore"
-        inputs:
-          command: restore
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          feedsToUse: config
-          nugetConfigPath: ${{ parameters.projectParentDirectory }}NuGet.config
+      - ${{ each project in parameters.projects }}:
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet restore ${{ project }}"
+            inputs:
+              command: restore
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              feedsToUse: config
+              nugetConfigPath: ${{ parameters.projectParentDirectory }}NuGet.config
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet build"
-        inputs:
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          arguments: "--configuration $(BuildConfiguration)"
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet build ${{ project }}"
+            inputs:
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              arguments: "--configuration $(BuildConfiguration)"
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet test"
-        inputs:
-          command: test
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --framework ${{ parameters.framework }} --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
-          publishTestResults: true
-        continueOnError: true
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet test ${{ project }}"
+            inputs:
+              command: test
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}.Tests/${{ project }}.Tests.csproj
+              arguments: '--configuration $(BuildConfiguration) -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings --framework ${{ parameters.framework }} --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+              publishTestResults: true
+            continueOnError: true
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet custom pack main"
-        inputs:
-          command: custom
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          custom: pack
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
-        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet custom pack release"
+            inputs:
+              command: custom
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              custom: pack
+              arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet custom pack not main"
-        inputs:
-          command: custom
-          projects: ${{ parameters.projectParentDirectory }}${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          custom: pack
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
-        condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet custom pack preview"
+            inputs:
+              command: custom
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              custom: pack
+              arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
+            condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       #- task: PublishCodeCoverageResults@2
       # displayName: "Publish code coverage report"

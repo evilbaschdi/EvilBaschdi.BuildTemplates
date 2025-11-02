@@ -1,6 +1,7 @@
 parameters:
-  - name: "projectName"
-    type: string
+  - name: "projects"
+    type: object
+    default: []
   - name: "framework"
     type: string
     values:
@@ -19,7 +20,7 @@ stages:
     jobs:
       - template: buildNPack.yml
         parameters:
-          projectName: ${{ parameters.projectName }}
+          projects: ${{ parameters.projects }}
           framework: ${{ parameters.framework }}
           projectParentDirectory: ${{ parameters.projectParentDirectory }}
 
