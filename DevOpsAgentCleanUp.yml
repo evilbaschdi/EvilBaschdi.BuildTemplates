@@ -1,8 +1,8 @@
 jobs:
   - job: DeepCleanupAllAgents
     displayName: 'Deep Cleanup auf allen Agents'
-    strategy:
-      parallel: 5 # <--- SETZE HIER DIE ANZAHL DEINER AGENT-SLOTS EIN
+    #strategy:
+    #  parallel: 5 # <--- SETZE HIER DIE ANZAHL DEINER AGENT-SLOTS EIN
     pool:
       name: x-agentpool
     steps:
