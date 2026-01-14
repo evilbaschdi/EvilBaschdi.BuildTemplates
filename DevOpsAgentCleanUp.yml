@@ -1,5 +1,10 @@
-steps:
-- task: DeleteFiles@1
-  displayName: 'Delete files from $(Agent.WorkFolder)'
-  inputs:
-    SourceFolder: '$(Agent.WorkFolder)'
+jobs:
+  - job: DevOpsAgentCleanUp
+    pool:
+      name: x-agentpool
+      
+    steps:
+    - task: DeleteFiles@1
+      displayName: 'Delete files from $(Agent.WorkFolder)'
+      inputs:
+        SourceFolder: '$(Agent.WorkFolder)'
