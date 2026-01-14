@@ -1,0 +1,5 @@
+steps:
+- task: DeleteFiles@1
+  displayName: 'Delete files from $(Agent.WorkFolder)'
+  inputs:
+    SourceFolder: '$(Agent.WorkFolder)'
