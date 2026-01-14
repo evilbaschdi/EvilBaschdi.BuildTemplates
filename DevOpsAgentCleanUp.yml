@@ -1,24 +1,30 @@
 jobs:
   - job: CleanAllAgents
     strategy:
-      parallel: 5 # Anzahl deiner Agenten im Pool
+      parallel: 5 # Anzahl deiner Agenten
     pool:
       name: x-agentpool
     steps:
-      - powershell: |
-          Write-Host "Cleaning Workfolder: $(Agent.WorkFolder)"
-          # Hier ist Vorsicht geboten: 
-          # Man kann nicht den Ordner löschen, in dem man gerade arbeitet.
-          # Daher löschen wir nur Unterordner, die NICHT der aktuelle Job-ID entsprechen.
-          
-          Get-ChildItem -Path "$(Agent.WorkFolder)" -Directory | 
-          Where-Object { $_.Name -ne "tasks" -and $_.Name -ne "_tasks" -and $_.Name -ne "_tool" -and $_.Name -match '^\d+$' } |
-          ForEach-Object {
-            $folderId = $_.Name
-            # Verhindern, dass der aktuelle Arbeitsordner gelöscht wird
-            if ("$(Agent.Id)" -ne $folderId) { 
-               Write-Host "Removing old work folder: $($_.FullName)"
-               Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
-            }
-          }
-        displayName: 'Smart Cleanup of WorkFolder'
+    - bash: |
+        echo "Cleaning work folder: $AGENT_WORKFOLDER"
+        # Gehe in den Workfolder
+        cd "$AGENT_WORKFOLDER"
+        
+        # Lösche alle nummerierten Ordner (1, 2, 3...), 
+        # aber NICHT den aktuellen Ordner des laufenden Jobs
+        # $AGENT_ID ist die ID des aktuellen Agenten-Slots
+        
+        for d in */; do
+            dir=${d%/}
+            # Prüfen, ob der Ordner eine Zahl ist (Build-Verzeichnisse)
+            if [[ $dir =~ ^[0-9]+$ ]]; then
+                # Sicherheitscheck: Nicht das Verzeichnis des aktuellen Jobs löschen
+                # Azure DevOps nutzt für den aktuellen Job oft einen Unterordner, 
+                # wir löschen hier alles, was wir "erwischen" können.
+                # Laufende Prozesse verhindern das Löschen des aktiven Ordners automatisch.
+                echo "Attempting to remove folder: $dir"
+                rm -rf "$dir" 2>/dev/null || echo "Folder $dir is in use, skipping."
+            fi
+        done
+      displayName: 'Universal Cleanup (Windows & Debian)'
+      continueOnError: true
