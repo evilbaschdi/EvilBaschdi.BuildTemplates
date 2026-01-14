@@ -1,10 +1,24 @@
 jobs:
-  - job: DevOpsAgentCleanUp
+  - job: CleanAllAgents
+    strategy:
+      parallel: 5 # Anzahl deiner Agenten im Pool
     pool:
       name: x-agentpool
-      
     steps:
-    - task: DeleteFiles@1
-      displayName: 'Delete files from $(Agent.WorkFolder)'
-      inputs:
-        SourceFolder: '$(Agent.WorkFolder)'
+      - powershell: |
+          Write-Host "Cleaning Workfolder: $(Agent.WorkFolder)"
+          # Hier ist Vorsicht geboten: 
+          # Man kann nicht den Ordner löschen, in dem man gerade arbeitet.
+          # Daher löschen wir nur Unterordner, die NICHT der aktuelle Job-ID entsprechen.
+          
+          Get-ChildItem -Path "$(Agent.WorkFolder)" -Directory | 
+          Where-Object { $_.Name -ne "tasks" -and $_.Name -ne "_tasks" -and $_.Name -ne "_tool" -and $_.Name -match '^\d+$' } |
+          ForEach-Object {
+            $folderId = $_.Name
+            # Verhindern, dass der aktuelle Arbeitsordner gelöscht wird
+            if ("$(Agent.Id)" -ne $folderId) { 
+               Write-Host "Removing old work folder: $($_.FullName)"
+               Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+        displayName: 'Smart Cleanup of WorkFolder'
