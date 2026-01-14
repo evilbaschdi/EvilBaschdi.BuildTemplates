@@ -1,30 +1,42 @@
 jobs:
-  - job: CleanAllAgents
+  - job: DeepCleanupAllAgents
+    displayName: 'Deep Cleanup auf allen Agents'
     strategy:
-      parallel: 5 # Anzahl deiner Agenten
+      parallel: 5 # <--- SETZE HIER DIE ANZAHL DEINER AGENT-SLOTS EIN
     pool:
       name: x-agentpool
     steps:
     - bash: |
-        echo "Cleaning work folder: $AGENT_WORKFOLDER"
-        # Gehe in den Workfolder
-        cd "$AGENT_WORKFOLDER"
+        echo "Agent Name: $(Agent.Name)"
+        echo "Betriebssystem: $AGENT_OS"
         
-        # Lösche alle nummerierten Ordner (1, 2, 3...), 
-        # aber NICHT den aktuellen Ordner des laufenden Jobs
-        # $AGENT_ID ist die ID des aktuellen Agenten-Slots
-        
-        for d in */; do
-            dir=${d%/}
-            # Prüfen, ob der Ordner eine Zahl ist (Build-Verzeichnisse)
-            if [[ $dir =~ ^[0-9]+$ ]]; then
-                # Sicherheitscheck: Nicht das Verzeichnis des aktuellen Jobs löschen
-                # Azure DevOps nutzt für den aktuellen Job oft einen Unterordner, 
-                # wir löschen hier alles, was wir "erwischen" können.
-                # Laufende Prozesse verhindern das Löschen des aktiven Ordners automatisch.
-                echo "Attempting to remove folder: $dir"
-                rm -rf "$dir" 2>/dev/null || echo "Folder $dir is in use, skipping."
-            fi
-        done
-      displayName: 'Universal Cleanup (Windows & Debian)'
+        WORK_DIR="$(Agent.WorkFolder)"
+        TOOL_DIR="$WORK_DIR/_tool"
+
+        # 1. Arbeitsverzeichnisse (1, 2, 3...)
+        if [ -d "$WORK_DIR" ]; then
+            echo "Bereinige nummerierte Verzeichnisse in $WORK_DIR..."
+            find "$WORK_DIR" -maxdepth 1 -type d -regextype posix-extended -regex ".*/[0-9]+" -exec rm -rf {} + 2>/dev/null
+        fi
+
+        # 2. .NET SDK Cache (_tool/dotnet)
+        if [ -d "$TOOL_DIR/dotnet" ]; then
+            echo "Lösche SDK-Leichen in $TOOL_DIR/dotnet..."
+            rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
+        fi
+
+        # 3. NuGet Cache (Betriebssystem-spezifisch)
+        if [ "$AGENT_OS" = "Linux" ]; then
+            NUGET_PATH="$HOME/.nuget/packages"
+        else
+            NUGET_PATH="$USERPROFILE/.nuget/packages"
+        fi
+
+        if [ -d "$NUGET_PATH" ]; then
+            echo "Bereinige NuGet-Pakete älter als 14 Tage in $NUGET_PATH"
+            find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} + 2>/dev/null
+        fi
+      displayName: 'Systemübergreifende Reinigung'
+      env:
+        AGENT_OS: $(Agent.OS)
       continueOnError: true
