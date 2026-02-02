@@ -1,6 +1,6 @@
 jobs:
   - job: DeepCleanupAllAgents
-    displayName: "Deep Cleanup"
+    displayName: "Deep Cleanup auf allen Agents"
     pool:
       name: x-agentpool
     steps:
@@ -10,37 +10,39 @@ jobs:
         inputs:
           targetType: inline
           script: |
-            # 1. Pfad-Korrektur NUR für Windows
-            # Wenn wir auf Windows sind, bevorzugen wir Git-Bash vor der System-Bash
-            if [[ "$AGENT_OS" == "Windows_NT" ]]; then
-                export PATH="/c/Program Files/Git/bin:$PATH"
-                echo "Windows erkannt, Git-Bash Pfad priorisiert."
-            fi
-
             echo "Agent Name: $(Agent.Name)"
-            echo "Nutze Shell: $(which bash)"
+            echo "Betriebssystem: $AGENT_OS"
 
+            # Pfade normalisieren (wichtig für Windows)
             WORK_DIR="$(Agent.WorkFolder)"
             TOOL_DIR="$WORK_DIR/_tool"
 
-            # 2. Reinigung der nummerierten Ordner
+            # 1. Arbeitsverzeichnisse (1, 2, 3...)
             if [ -d "$WORK_DIR" ]; then
-                echo "Bereinige $WORK_DIR..."
+                echo "Bereinige nummerierte Verzeichnisse in $WORK_DIR..."
+                # Unter Windows (Git Bash) funktioniert -regex oft besser ohne posix-extended
                 find "$WORK_DIR" -maxdepth 1 -type d -regex ".*/[0-9]+" -exec rm -rf {} + 2>/dev/null
             fi
 
-            # 3. .NET SDK Cache
+            # 2. .NET SDK Cache (_tool/dotnet)
             if [ -d "$TOOL_DIR/dotnet" ]; then
+                echo "Lösche SDK-Leichen in $TOOL_DIR/dotnet..."
                 rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
             fi
 
-            # 4. NuGet Cache
-            # $HOME zeigt in der Git-Bash (Windows) und unter Linux jeweils korrekt 
-            # auf das Benutzerverzeichnis (~/.nuget/packages)
-            NUGET_PATH="$HOME/.nuget/packages"
-            
+            # 3. NuGet Cache (Betriebssystem-spezifisch)
+            # Hinweis: Unter Git Bash wird $USERPROFILE oft als /c/Users/Name erkannt
+            if [ "$AGENT_OS" = "Linux" ]; then
+                NUGET_PATH="$HOME/.nuget/packages"
+            else
+                # Wir nutzen die Windows-Umgebungsvariable, konvertieren sie aber für Bash
+                NUGET_PATH=$(echo "/$USERPROFILE" | sed 's/\\/\//g' | sed 's/://g')
+                # Falls das fehlschlägt, nutzen wir einen Fallback
+                [ ! -d "$NUGET_PATH" ] && NUGET_PATH="$HOME/.nuget/packages"
+            fi
+
             if [ -d "$NUGET_PATH" ]; then
-                echo "Bereinige NuGet in $NUGET_PATH"
+                echo "Bereinige NuGet-Pakete älter als 14 Tage in $NUGET_PATH"
                 find "$NUGET_PATH" -type d -mtime +14 -exec rm -rf {} + 2>/dev/null
             fi
         env:
