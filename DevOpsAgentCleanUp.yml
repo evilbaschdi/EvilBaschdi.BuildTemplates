@@ -6,37 +6,45 @@ jobs:
     pool:
       name: x-agentpool
     steps:
-    - task: PowerShell@2
-      inputs:
-        targetType: inline
-        script: |
-          pwsh -NoLogo -NoProfile -Command "
-            Write-Host 'Agent Name: $(Agent.Name)'
-            Write-Host 'OS: $env:AGENT_OS'
+    # Linux Cleanup
+    - bash: |
+        echo "Agent Name: $(Agent.Name)"
+        echo "OS: $AGENT_OS"
 
-            \$workDir = '$(Agent.WorkFolder)'
-            \$toolDir = \"\$workDir/_tool\"
+        WORK_DIR="$(Agent.WorkFolder)"
+        TOOL_DIR="$WORK_DIR/_tool"
 
-            # 1. Nummerierte Verzeichnisse
-            Get-ChildItem \$workDir -Directory | Where-Object { \$_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
+        # 1. Nummerierte Verzeichnisse
+        find "$WORK_DIR" -maxdepth 1 -type d -regex ".*/[0-9]+" -exec rm -rf {} +
 
-            # 2. .NET SDK Cache
-            if (Test-Path \"\$toolDir/dotnet\") {
-                Remove-Item \"\$toolDir/dotnet/*\" -Recurse -Force
-            }
+        # 2. .NET SDK Cache
+        rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
 
-            # 3. NuGet Cache
-            if (\$env:AGENT_OS -eq 'Linux') {
-                \$nugetPath = \"\$HOME/.nuget/packages\"
-            } else {
-                \$nugetPath = \"\$env:USERPROFILE/.nuget/packages\"
-            }
-
-            if (Test-Path \$nugetPath) {
-                Get-ChildItem \$nugetPath -Directory | Where-Object { \$_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
-            }
-          "
-      displayName: "Cross-Platform Cleanup"
+        # 3. NuGet Cache
+        NUGET_PATH="$HOME/.nuget/packages"
+        find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} +
+      displayName: "Cleanup (Linux)"
+      condition: eq( variables['Agent.OS'], 'Linux' )
       env:
         AGENT_OS: $(Agent.OS)
-      continueOnError: true
+
+    # Windows Cleanup
+    - powershell: |
+        Write-Host "Agent Name: $(Agent.Name)"
+        Write-Host "OS: $env:AGENT_OS"
+
+        $workDir = "$(Agent.WorkFolder)"
+        $toolDir = "$workDir\_tool"
+
+        Get-ChildItem $workDir -Directory | Where-Object { $_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
+
+        if (Test-Path "$toolDir\dotnet") {
+            Remove-Item "$toolDir\dotnet\*" -Recurse -Force
+        }
+
+        $nugetPath = "$env:USERPROFILE\.nuget\packages"
+        Get-ChildItem $nugetPath -Directory | Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
+      displayName: "Cleanup (Windows)"
+      condition: eq( variables['Agent.OS'], 'Windows_NT' )
+      env:
+        AGENT_OS: $(Agent.OS)
