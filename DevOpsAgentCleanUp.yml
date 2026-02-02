@@ -47,6 +47,8 @@ jobs:
           Write-Host "Agent Name: $(Agent.Name)"
           Write-Host "OS: $env:AGENT_OS"
 
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
           $workDir = "$(Agent.WorkFolder)"
           $toolDir = "$workDir\_tool"
 
