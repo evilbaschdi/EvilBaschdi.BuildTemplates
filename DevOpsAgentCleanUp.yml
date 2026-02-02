@@ -6,31 +6,36 @@ jobs:
     pool:
       name: x-agentpool
     steps:
-    - pwsh: |
-        Write-Host "Agent Name: $(Agent.Name)"
-        Write-Host "OS: $env:AGENT_OS"
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        script: |
+          pwsh -NoLogo -NoProfile -Command "
+            Write-Host 'Agent Name: $(Agent.Name)'
+            Write-Host 'OS: $env:AGENT_OS'
 
-        $workDir = "$(Agent.WorkFolder)"
-        $toolDir = "$workDir/_tool"
+            \$workDir = '$(Agent.WorkFolder)'
+            \$toolDir = \"\$workDir/_tool\"
 
-        # 1. Nummerierte Verzeichnisse
-        Get-ChildItem $workDir -Directory | Where-Object { $_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
+            # 1. Nummerierte Verzeichnisse
+            Get-ChildItem \$workDir -Directory | Where-Object { \$_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
 
-        # 2. .NET SDK Cache
-        if (Test-Path "$toolDir/dotnet") {
-            Remove-Item "$toolDir/dotnet/*" -Recurse -Force
-        }
+            # 2. .NET SDK Cache
+            if (Test-Path \"\$toolDir/dotnet\") {
+                Remove-Item \"\$toolDir/dotnet/*\" -Recurse -Force
+            }
 
-        # 3. NuGet Cache
-        if ($env:AGENT_OS -eq "Linux") {
-            $nugetPath = "$HOME/.nuget/packages"
-        } else {
-            $nugetPath = "$env:USERPROFILE/.nuget/packages"
-        }
+            # 3. NuGet Cache
+            if (\$env:AGENT_OS -eq 'Linux') {
+                \$nugetPath = \"\$HOME/.nuget/packages\"
+            } else {
+                \$nugetPath = \"\$env:USERPROFILE/.nuget/packages\"
+            }
 
-        if (Test-Path $nugetPath) {
-            Get-ChildItem $nugetPath -Directory | Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
-        }
+            if (Test-Path \$nugetPath) {
+                Get-ChildItem \$nugetPath -Directory | Where-Object { \$_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
+            }
+          "
       displayName: "Cross-Platform Cleanup"
       env:
         AGENT_OS: $(Agent.OS)
