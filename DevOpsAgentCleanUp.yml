@@ -43,11 +43,11 @@ jobs:
       inputs:
         targetType: inline
         script: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
           Write-Host "Cleanup unter Windows"
           Write-Host "Agent Name: $(Agent.Name)"
-          Write-Host "OS: $env:AGENT_OS"
-
-          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Write-Host "OS: $env:AGENT_OS"          
 
           $workDir = "$(Agent.WorkFolder)"
           $toolDir = "$workDir\_tool"
