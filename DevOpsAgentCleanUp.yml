@@ -29,7 +29,7 @@ jobs:
         AGENT_OS: $(Agent.OS)
 
     # Windows Cleanup
-    - powershell: |
+    - pwsh: |
         Write-Host "Agent Name: $(Agent.Name)"
         Write-Host "OS: $env:AGENT_OS"
 
