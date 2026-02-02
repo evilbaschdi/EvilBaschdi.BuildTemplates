@@ -36,6 +36,8 @@ jobs:
         $workDir = "$(Agent.WorkFolder)"
         $toolDir = "$workDir\_tool"
 
+        Import-Module Microsoft.PowerShell.Security
+
         Get-ChildItem $workDir -Directory | Where-Object { $_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
 
         if (Test-Path "$toolDir\dotnet") {
