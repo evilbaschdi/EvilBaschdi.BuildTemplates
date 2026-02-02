@@ -35,46 +35,42 @@ jobs:
         AGENT_OS: $(Agent.OS)
 
     # -------------------------
-    # Windows Cleanup
+    # Windows Cleanup (CMD Version)
     # -------------------------
-    - task: PowerShell@2
-      displayName: "Cleanup (Windows)"
+    - task: CmdLine@2
+      displayName: "Cleanup (Windows CMD)"
       condition: eq( variables['Agent.OS'], 'Windows_NT' )
       inputs:
-        targetType: inline
-        pwsh: true # Nutzt PowerShell Core (pwsh.exe)
         script: |
-          # Erzwinge den Import zu Beginn, um sicherzustellen, dass die Session bereit ist
-          try {
-              Import-Module Microsoft.PowerShell.Security -ErrorAction Stop
-              Write-Host "Sicherheits-Modul erfolgreich geladen."
-          } catch {
-              Write-Warning "Modul-Import fehlgeschlagen, versuche fortzufahren: $($_.Exception.Message)"
-          }
-
-          Write-Host "Agent Name: $(Agent.Name)"
+          @echo off
+          echo Cleanup unter Windows (CMD)
+          echo Agent Name: $(Agent.Name)
           
-          $workDir = "$(Agent.WorkFolder)"
-          $toolDir = "$workDir\_tool"
+          set "WORK_DIR=$(Agent.WorkFolder)"
+          set "TOOL_DIR=%WORK_DIR%\_tool"
+          set "NUGET_PATH=%USERPROFILE%\.nuget\packages"
 
-          # 1. Nummerierte Verzeichnisse (Pipeline-Arbeitsordner)
-          if (Test-Path $workDir) {
-              Get-ChildItem $workDir -Directory |
-                Where-Object { $_.Name -match '^\d+$' } |
-                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-          }
+          :: 1. Nummerierte Verzeichnisse löschen
+          :: Wir loopen durch alle Ordner und prüfen mit Regex-Ersatz, ob sie numerisch sind
+          echo Suche nach nummerierten Arbeitsverzeichnissen in %WORK_DIR%...
+          for /d %%i in ("%WORK_DIR%\*") do (
+              echo %%~nxi | findstr /r "^[0-9][0-9]*$" >nul
+              if errorlevel 0 (
+                  echo Loesche Ordner: %%i
+                  rd /s /q "%%i" 2>nul
+              )
+          )
 
-          # 2. .NET SDK Cache
-          if (Test-Path "$toolDir\dotnet") {
-              Remove-Item "$toolDir\dotnet\*" -Recurse -Force -ErrorAction SilentlyContinue
-          }
+          :: 2. .NET SDK Cache
+          if exist "%TOOL_DIR%\dotnet" (
+              echo Loesche .NET SDK Cache...
+              del /f /s /q "%TOOL_DIR%\dotnet\*.*" 2>nul
+              for /d %%p in ("%TOOL_DIR%\dotnet\*") do rd /s /q "%%p" 2>nul
+          )
 
-          # 3. NuGet Cache
-          $nugetPath = "$env:USERPROFILE\.nuget\packages"
-          if (Test-Path $nugetPath) {
-              Get-ChildItem $nugetPath -Directory |
-                Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } |
-                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-          }
-      env:
-        AGENT_OS: $(Agent.OS)
+          :: 3. NuGet Cache (aelter als 14 Tage)
+          :: In CMD nutzen wir dafür das Tool 'forfiles'
+          if exist "%NUGET_PATH%" (
+              echo Bereinige NuGet Packages (aelter als 14 Tage)...
+              forfiles /p "%NUGET_PATH%" /d -14 /c "cmd /c if @isdir==TRUE rd /s /q @path" 2>nul
+          )
