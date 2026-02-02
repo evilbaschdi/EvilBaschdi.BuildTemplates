@@ -1,76 +1,42 @@
 jobs:
-  - job: DeepCleanupAllAgents
-    displayName: 'Deep Cleanup auf allen Agents'
-    pool:
-      name: x-agentpool
+    - job: DeepCleanupAllAgents
+      displayName: "Deep Cleanup auf allen Agents"
+      #strategy:
+      #  parallel: 5 # <--- SETZE HIER DIE ANZAHL DEINER AGENT-SLOTS EIN
+      pool:
+          name: x-agentpool
+      steps:
+          - bash: |
+                echo "Agent Name: $(Agent.Name)"
+                echo "Betriebssystem: $AGENT_OS"
 
-    steps:
+                WORK_DIR="$(Agent.WorkFolder)"
+                TOOL_DIR="$WORK_DIR/_tool"
 
-    # -------------------------
-    # Linux Cleanup
-    # -------------------------
-    - task: Bash@3
-      displayName: "Cleanup (Linux)"
-      condition: eq( variables['Agent.OS'], 'Linux' )
-      inputs:
-        targetType: inline
-        script: |
-          echo "Cleanup unter Linux"
-          echo "Agent Name: $(Agent.Name)"
-          echo "OS: $AGENT_OS"
+                # 1. Arbeitsverzeichnisse (1, 2, 3...)
+                if [ -d "$WORK_DIR" ]; then
+                    echo "Bereinige nummerierte Verzeichnisse in $WORK_DIR..."
+                    find "$WORK_DIR" -maxdepth 1 -type d -regextype posix-extended -regex ".*/[0-9]+" -exec rm -rf {} + 2>/dev/null
+                fi
 
-          WORK_DIR="$(Agent.WorkFolder)"
-          TOOL_DIR="$WORK_DIR/_tool"
+                # 2. .NET SDK Cache (_tool/dotnet)
+                if [ -d "$TOOL_DIR/dotnet" ]; then
+                    echo "Lösche SDK-Leichen in $TOOL_DIR/dotnet..."
+                    rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
+                fi
 
-          # 1. Nummerierte Verzeichnisse
-          find "$WORK_DIR" -maxdepth 1 -type d -regex ".*/[0-9]+" -exec rm -rf {} +
+                # 3. NuGet Cache (Betriebssystem-spezifisch)
+                if [ "$AGENT_OS" = "Linux" ]; then
+                    NUGET_PATH="$HOME/.nuget/packages"
+                else
+                    NUGET_PATH="$USERPROFILE/.nuget/packages"
+                fi
 
-          # 2. .NET SDK Cache
-          rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
-
-          # 3. NuGet Cache
-          NUGET_PATH="$HOME/.nuget/packages"
-          find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} +
-      env:
-        AGENT_OS: $(Agent.OS)
-
-    # -------------------------
-    # Windows Cleanup (CMD Version)
-    # -------------------------
-    - task: CmdLine@2
-      displayName: "Cleanup (Windows CMD)"
-      condition: eq( variables['Agent.OS'], 'Windows_NT' )
-      inputs:
-        script: |
-          @echo off
-          echo Cleanup unter Windows (CMD)
-          echo Agent Name: $(Agent.Name)
-          
-          set "WORK_DIR=$(Agent.WorkFolder)"
-          set "TOOL_DIR=%WORK_DIR%\_tool"
-          set "NUGET_PATH=%USERPROFILE%\.nuget\packages"
-
-          :: 1. Nummerierte Verzeichnisse löschen
-          :: Wir loopen durch alle Ordner und prüfen mit Regex-Ersatz, ob sie numerisch sind
-          echo Suche nach nummerierten Arbeitsverzeichnissen in %WORK_DIR%...
-          for /d %%i in ("%WORK_DIR%\*") do (
-              echo %%~nxi | findstr /r "^[0-9][0-9]*$" >nul
-              if errorlevel 0 (
-                  echo Loesche Ordner: %%i
-                  rd /s /q "%%i" 2>nul
-              )
-          )
-
-          :: 2. .NET SDK Cache
-          if exist "%TOOL_DIR%\dotnet" (
-              echo Loesche .NET SDK Cache...
-              del /f /s /q "%TOOL_DIR%\dotnet\*.*" 2>nul
-              for /d %%p in ("%TOOL_DIR%\dotnet\*") do rd /s /q "%%p" 2>nul
-          )
-
-          :: 3. NuGet Cache (aelter als 14 Tage)
-          :: In CMD nutzen wir dafür das Tool 'forfiles'
-          if exist "%NUGET_PATH%" (
-              echo Bereinige NuGet Packages (aelter als 14 Tage)...
-              forfiles /p "%NUGET_PATH%" /d -14 /c "cmd /c if @isdir==TRUE rd /s /q @path" 2>nul
-          )
+                if [ -d "$NUGET_PATH" ]; then
+                    echo "Bereinige NuGet-Pakete älter als 14 Tage in $NUGET_PATH"
+                    find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} + 2>/dev/null
+                fi
+            displayName: "Systemübergreifende Reinigung"
+            env:
+                AGENT_OS: $(Agent.OS)
+            continueOnError: true
