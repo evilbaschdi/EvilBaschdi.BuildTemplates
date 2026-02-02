@@ -6,37 +6,32 @@ jobs:
     pool:
       name: x-agentpool
     steps:
-    - bash: |
-        echo "Agent Name: $(Agent.Name)"
-        echo "Betriebssystem: $AGENT_OS"
-        
-        WORK_DIR="$(Agent.WorkFolder)"
-        TOOL_DIR="$WORK_DIR/_tool"
+    - pwsh: |
+        Write-Host "Agent Name: $(Agent.Name)"
+        Write-Host "OS: $env:AGENT_OS"
 
-        # 1. Arbeitsverzeichnisse (1, 2, 3...)
-        if [ -d "$WORK_DIR" ]; then
-            echo "Bereinige nummerierte Verzeichnisse in $WORK_DIR..."
-            find "$WORK_DIR" -maxdepth 1 -type d -regextype posix-extended -regex ".*/[0-9]+" -exec rm -rf {} + 2>/dev/null
-        fi
+        $workDir = "$(Agent.WorkFolder)"
+        $toolDir = "$workDir/_tool"
 
-        # 2. .NET SDK Cache (_tool/dotnet)
-        if [ -d "$TOOL_DIR/dotnet" ]; then
-            echo "Lösche SDK-Leichen in $TOOL_DIR/dotnet..."
-            rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
-        fi
+        # 1. Nummerierte Verzeichnisse
+        Get-ChildItem $workDir -Directory | Where-Object { $_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
 
-        # 3. NuGet Cache (Betriebssystem-spezifisch)
-        if [ "$AGENT_OS" = "Linux" ]; then
-            NUGET_PATH="$HOME/.nuget/packages"
-        else
-            NUGET_PATH="$USERPROFILE/.nuget/packages"
-        fi
+        # 2. .NET SDK Cache
+        if (Test-Path "$toolDir/dotnet") {
+            Remove-Item "$toolDir/dotnet/*" -Recurse -Force
+        }
 
-        if [ -d "$NUGET_PATH" ]; then
-            echo "Bereinige NuGet-Pakete älter als 14 Tage in $NUGET_PATH"
-            find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} + 2>/dev/null
-        fi
-      displayName: 'Systemübergreifende Reinigung'
+        # 3. NuGet Cache
+        if ($env:AGENT_OS -eq "Linux") {
+            $nugetPath = "$HOME/.nuget/packages"
+        } else {
+            $nugetPath = "$env:USERPROFILE/.nuget/packages"
+        }
+
+        if (Test-Path $nugetPath) {
+            Get-ChildItem $nugetPath -Directory | Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
+        }
+      displayName: "Cross-Platform Cleanup"
       env:
         AGENT_OS: $(Agent.OS)
       continueOnError: true
