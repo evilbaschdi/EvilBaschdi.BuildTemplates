@@ -1,52 +1,71 @@
 jobs:
   - job: DeepCleanupAllAgents
     displayName: 'Deep Cleanup auf allen Agents'
-    #strategy:
-    #  parallel: 5 # <--- SETZE HIER DIE ANZAHL DEINER AGENT-SLOTS EIN
     pool:
       name: x-agentpool
+
     steps:
+
+    # -------------------------
     # Linux Cleanup
-    - bash: |
-        echo "Agent Name: $(Agent.Name)"
-        echo "OS: $AGENT_OS"
-
-        WORK_DIR="$(Agent.WorkFolder)"
-        TOOL_DIR="$WORK_DIR/_tool"
-
-        # 1. Nummerierte Verzeichnisse
-        find "$WORK_DIR" -maxdepth 1 -type d -regex ".*/[0-9]+" -exec rm -rf {} +
-
-        # 2. .NET SDK Cache
-        rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
-
-        # 3. NuGet Cache
-        NUGET_PATH="$HOME/.nuget/packages"
-        find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} +
+    # -------------------------
+    - task: Bash@3
       displayName: "Cleanup (Linux)"
       condition: eq( variables['Agent.OS'], 'Linux' )
+      inputs:
+        targetType: inline
+        script: |
+          echo "Cleanup unter Linux"
+          echo "Agent Name: $(Agent.Name)"
+          echo "OS: $AGENT_OS"
+
+          WORK_DIR="$(Agent.WorkFolder)"
+          TOOL_DIR="$WORK_DIR/_tool"
+
+          # 1. Nummerierte Verzeichnisse
+          find "$WORK_DIR" -maxdepth 1 -type d -regex ".*/[0-9]+" -exec rm -rf {} +
+
+          # 2. .NET SDK Cache
+          rm -rf "$TOOL_DIR/dotnet"/* 2>/dev/null
+
+          # 3. NuGet Cache
+          NUGET_PATH="$HOME/.nuget/packages"
+          find "$NUGET_PATH" -type d -atime +14 -exec rm -rf {} +
       env:
         AGENT_OS: $(Agent.OS)
 
+    # -------------------------
     # Windows Cleanup
-    - pwsh: |
-        Write-Host "Agent Name: $(Agent.Name)"
-        Write-Host "OS: $env:AGENT_OS"
-
-        $workDir = "$(Agent.WorkFolder)"
-        $toolDir = "$workDir\_tool"
-
-        Import-Module Microsoft.PowerShell.Security
-
-        Get-ChildItem $workDir -Directory | Where-Object { $_.Name -match '^\d+$' } | Remove-Item -Recurse -Force
-
-        if (Test-Path "$toolDir\dotnet") {
-            Remove-Item "$toolDir\dotnet\*" -Recurse -Force
-        }
-
-        $nugetPath = "$env:USERPROFILE\.nuget\packages"
-        Get-ChildItem $nugetPath -Directory | Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } | Remove-Item -Recurse -Force
+    # -------------------------
+    - task: PowerShell@2
       displayName: "Cleanup (Windows)"
       condition: eq( variables['Agent.OS'], 'Windows_NT' )
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "Cleanup unter Windows"
+          Write-Host "Agent Name: $(Agent.Name)"
+          Write-Host "OS: $env:AGENT_OS"
+
+          $workDir = "$(Agent.WorkFolder)"
+          $toolDir = "$workDir\_tool"
+
+          # 1. Nummerierte Verzeichnisse
+          Get-ChildItem $workDir -Directory |
+            Where-Object { $_.Name -match '^\d+$' } |
+            Remove-Item -Recurse -Force
+
+          # 2. .NET SDK Cache
+          if (Test-Path "$toolDir\dotnet") {
+              Remove-Item "$toolDir\dotnet\*" -Recurse -Force
+          }
+
+          # 3. NuGet Cache
+          $nugetPath = "$env:USERPROFILE\.nuget\packages"
+          if (Test-Path $nugetPath) {
+              Get-ChildItem $nugetPath -Directory |
+                Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } |
+                Remove-Item -Recurse -Force
+          }
       env:
         AGENT_OS: $(Agent.OS)
