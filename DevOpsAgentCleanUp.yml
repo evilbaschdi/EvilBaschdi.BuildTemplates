@@ -42,9 +42,8 @@ jobs:
       condition: eq( variables['Agent.OS'], 'Windows_NT' )
       inputs:
         targetType: inline
+        pwsh: true # Dies nutzt PowerShell Core (pwsh.exe) statt Windows PowerShell
         script: |
-          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
           Write-Host "Cleanup unter Windows"
           Write-Host "Agent Name: $(Agent.Name)"
           Write-Host "OS: $env:AGENT_OS"          
