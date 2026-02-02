@@ -42,26 +42,31 @@ jobs:
       condition: eq( variables['Agent.OS'], 'Windows_NT' )
       inputs:
         targetType: inline
-        pwsh: true # Dies nutzt PowerShell Core (pwsh.exe) statt Windows PowerShell
+        pwsh: true # Nutzt PowerShell Core (pwsh.exe)
         script: |
-          $env:PSModulePath -split ';' 
-          Import-Module Microsoft.PowerShell.Security -Verbose
-          
-          Write-Host "Cleanup unter Windows"
-          Write-Host "Agent Name: $(Agent.Name)"
-          Write-Host "OS: $env:AGENT_OS"          
+          # Erzwinge den Import zu Beginn, um sicherzustellen, dass die Session bereit ist
+          try {
+              Import-Module Microsoft.PowerShell.Security -ErrorAction Stop
+              Write-Host "Sicherheits-Modul erfolgreich geladen."
+          } catch {
+              Write-Warning "Modul-Import fehlgeschlagen, versuche fortzufahren: $($_.Exception.Message)"
+          }
 
+          Write-Host "Agent Name: $(Agent.Name)"
+          
           $workDir = "$(Agent.WorkFolder)"
           $toolDir = "$workDir\_tool"
 
-          # 1. Nummerierte Verzeichnisse
-          Get-ChildItem $workDir -Directory |
-            Where-Object { $_.Name -match '^\d+$' } |
-            Remove-Item -Recurse -Force
+          # 1. Nummerierte Verzeichnisse (Pipeline-Arbeitsordner)
+          if (Test-Path $workDir) {
+              Get-ChildItem $workDir -Directory |
+                Where-Object { $_.Name -match '^\d+$' } |
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
 
           # 2. .NET SDK Cache
           if (Test-Path "$toolDir\dotnet") {
-              Remove-Item "$toolDir\dotnet\*" -Recurse -Force
+              Remove-Item "$toolDir\dotnet\*" -Recurse -Force -ErrorAction SilentlyContinue
           }
 
           # 3. NuGet Cache
@@ -69,7 +74,7 @@ jobs:
           if (Test-Path $nugetPath) {
               Get-ChildItem $nugetPath -Directory |
                 Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-14) } |
-                Remove-Item -Recurse -Force
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
           }
       env:
         AGENT_OS: $(Agent.OS)
