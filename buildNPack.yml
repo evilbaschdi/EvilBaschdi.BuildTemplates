@@ -57,13 +57,7 @@ jobs:
                 -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings
                 --framework ${{ parameters.framework }}
                 --no-build
-                --
-                --coverage
-                --coverage-output-format cobertura
-                --coverage-output ${{ project }}.cobertura.xml
-                --report-trx
-                --report-trx-filename ${{ project }}.trx
-                --results-directory $(Agent.TempDirectory)/TestResults
+                -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
               publishTestResults: false
             continueOnError: true
 
