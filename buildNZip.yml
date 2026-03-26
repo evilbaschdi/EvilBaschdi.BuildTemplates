@@ -42,10 +42,10 @@ jobs:
           arguments: "--configuration $(BuildConfiguration)"
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet test ${{ project }}"
+        displayName: "dotnet test ${{ parameters.projectName }}"
         inputs:
           command: test
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.Tests/${{ project }}.Tests.csproj
+          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
           arguments: >
             --configuration $(BuildConfiguration)
             -s $(System.DefaultWorkingDirectory)/${{ parameters.projectName }}.runsettings
