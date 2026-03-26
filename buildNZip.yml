@@ -8,6 +8,8 @@ parameters:
       - net8.0-windows
       - net9.0
       - net9.0-windows
+      - net10.0
+      - net10.0-windows
 
 jobs:
   - job: BuildNZip
@@ -40,18 +42,25 @@ jobs:
           arguments: "--configuration $(BuildConfiguration)"
 
       - task: DotNetCoreCLI@2
-        displayName: "dotnet test"
+        displayName: "dotnet test ${{ project }}"
         inputs:
           command: test
-          projects: ${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
-          publishTestResults: true
+          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.Tests/${{ project }}.Tests.csproj
+          arguments: >
+            --configuration $(BuildConfiguration)
+            -s $(System.DefaultWorkingDirectory)/${{ parameters.projectName }}.runsettings
+            --framework ${{ parameters.framework }}
+            -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ parameters.projectName }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ parameters.projectName }}.cobertura.xml"
+          publishTestResults: false
         continueOnError: true
 
-      #- task: alanwales.resharper-code-analysis.custom-build-task.ResharperCli@2
-      #  displayName: 'Automated code quality checks'
-      #  inputs:
-      #    solutionOrProjectPath: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
+      - task: PublishTestResults@2
+        displayName: "Testergebnisse veröffentlichen"
+        inputs:
+          testResultsFormat: "VSTest"
+          testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ parameters.projectName }}.trx"
+          mergeTestResults: true
+          failTaskOnFailedTests: true
 
       - task: DotNetCoreCLI@2
         displayName: "dotnet publish"
@@ -64,9 +73,9 @@ jobs:
           modifyOutputPath: true
 
       - task: PublishCodeCoverageResults@2
-        displayName: "Publish code coverage report"
+        displayName: "Code Coverage veröffentlichen"
         inputs:
-          summaryFileLocation: "$(Agent.TempDirectory)/**/coverage.cobertura.xml"
+          summaryFileLocation: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: ZipArchive"
