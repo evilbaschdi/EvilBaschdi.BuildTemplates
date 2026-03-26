@@ -72,10 +72,13 @@ jobs:
           zipAfterPublish: true
           modifyOutputPath: true
 
-      - task: PublishCodeCoverageResults@2
+      - task: reportgenerator@5
         displayName: "Code Coverage veröffentlichen"
         inputs:
-          summaryFileLocation: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
+          reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
+          targetdir: "$(Agent.TempDirectory)/CoverageReport"
+          reporttypes: "HtmlInline_AzurePipelines;Cobertura"
+          publishCodeCoverageResults: true
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: ZipArchive"
