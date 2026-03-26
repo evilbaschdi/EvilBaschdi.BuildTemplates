@@ -1,6 +1,7 @@
 parameters:
-  - name: "projectName"
-    type: string
+  - name: "projects"
+    type: object
+    default: []
   - name: "framework"
     type: string
     values:
@@ -10,9 +11,11 @@ parameters:
       - net9.0-windows
       - net10.0
       - net10.0-windows
+  - name: "projectParentDirectory"
+    type: string
 
 jobs:
-  - job: BuildNZip
+  - job: BuildNPack
     pool:
       name: x-agentpool
     workspace:
@@ -25,68 +28,79 @@ jobs:
       - task: UseDotNet@2
         displayName: "Use .Net Core sdk from global.json"
         inputs:
+          packageType: "sdk"
           useGlobalJson: true
+          includePreviewVersions: true
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet restore"
-        inputs:
-          command: restore
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          feedsToUse: config
-          nugetConfigPath: NuGet.config
+      - ${{ each project in parameters.projects }}:
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet restore ${{ project }}"
+            inputs:
+              command: restore
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              feedsToUse: config
+              nugetConfigPath: ${{ parameters.projectParentDirectory }}NuGet.config
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet build"
-        inputs:
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.csproj
-          arguments: "--configuration $(BuildConfiguration)"
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet build ${{ project }}"
+            inputs:
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              arguments: "--configuration $(BuildConfiguration)"
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet test ${{ parameters.projectName }}"
-        inputs:
-          command: test
-          projects: ${{ parameters.projectName }}/${{ parameters.projectName }}.Tests/${{ parameters.projectName }}.Tests.csproj
-          arguments: >
-            --configuration $(BuildConfiguration)
-            -s $(System.DefaultWorkingDirectory)/${{ parameters.projectName }}.runsettings
-            --framework ${{ parameters.framework }}
-            -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ parameters.projectName }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ parameters.projectName }}.cobertura.xml"
-          publishTestResults: false
-        continueOnError: true
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet test ${{ project }}"
+            inputs:
+              command: test
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}.Tests/${{ project }}.Tests.csproj
+              arguments: >
+                --configuration $(BuildConfiguration)
+                -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings
+                --framework ${{ parameters.framework }}
+                -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
+              publishTestResults: true
+            continueOnError: true
 
-      - task: PublishTestResults@2
-        displayName: "Testergebnisse veröffentlichen"
-        inputs:
-          testResultsFormat: "VSTest"
-          testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ parameters.projectName }}.trx"
-          mergeTestResults: true
-          failTaskOnFailedTests: true
+          #- task: PublishTestResults@2
+          #  displayName: "Testergebnisse veröffentlichen"
+          #  inputs:
+          #    testResultsFormat: "VSTest"
+          #    testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
+          #    mergeTestResults: true
+          #    failTaskOnFailedTests: true
 
-      - task: DotNetCoreCLI@2
-        displayName: "dotnet publish"
-        inputs:
-          command: "publish"
-          publishWebProjects: false
-          projects: "${{ parameters.projectName }}/${{ parameters.projectName }}.csproj"
-          arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory)/Output --framework ${{ parameters.framework }} --self-contained false --no-build"
-          zipAfterPublish: true
-          modifyOutputPath: true
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet custom pack release"
+            inputs:
+              command: custom
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              custom: pack
+              arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+          - task: DotNetCoreCLI@2
+            displayName: "dotnet custom pack preview"
+            inputs:
+              command: custom
+              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              custom: pack
+              arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
+            condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       - script: dotnet tool install -g dotnet-reportgenerator-globaltool
         displayName: "Install ReportGenerator"
 
       - script: reportgenerator "-reports:$(Agent.TempDirectory)/TestResults/*.cobertura.xml" "-targetdir:$(Agent.TempDirectory)/CoverageReport" "-reporttypes:HtmlInline_AzurePipelines;Cobertura"
-        displayName: "Code Coverage Report generieren"
+        displayName: "Generate CodeCoverage Report"
 
       - task: PublishBuildArtifacts@1
-        displayName: "Code Coverage Report veröffentlichen"
+        displayName: "Publish CodeCoverage Report"
         inputs:
           PathtoPublish: "$(Agent.TempDirectory)/CoverageReport"
           ArtifactName: "CoverageReport"
         condition: succeededOrFailed()
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: ZipArchive"
+        displayName: "Publish Artifact: $(Build.SourceBranchName)"
         inputs:
-          ArtifactName: "ZipArchive"
+          ArtifactName: "$(Build.SourceBranchName)"
         condition: succeededOrFailed()
