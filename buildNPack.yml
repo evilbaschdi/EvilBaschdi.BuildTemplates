@@ -60,14 +60,6 @@ jobs:
               publishTestResults: true
             continueOnError: true
 
-          #- task: PublishTestResults@2
-          #  displayName: "Testergebnisse veröffentlichen"
-          #  inputs:
-          #    testResultsFormat: "VSTest"
-          #    testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
-          #    mergeTestResults: true
-          #    failTaskOnFailedTests: true
-
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
             inputs:
@@ -86,10 +78,10 @@ jobs:
               arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
             condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-      - task: PublishCodeCoverageResults@2
-        displayName: "Publish CodeCoverage Results"
-        inputs:
-          summaryFileLocation: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
+      #- task: PublishCodeCoverageResults@2
+      #  displayName: "Publish CodeCoverage Results"
+      #  inputs:
+      #    summaryFileLocation: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: $(Build.SourceBranchName)"
