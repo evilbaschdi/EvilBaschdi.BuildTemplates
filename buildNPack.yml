@@ -54,7 +54,6 @@ jobs:
               projects: ${{ parameters.projectParentDirectory }}${{ project }}.Tests/${{ project }}.Tests.csproj
               arguments: >
                 --configuration $(BuildConfiguration)
-                -s $(System.DefaultWorkingDirectory)/${{ parameters.projectParentDirectory }}.runsettings
                 --framework ${{ parameters.framework }}
                 -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
               publishTestResults: true
