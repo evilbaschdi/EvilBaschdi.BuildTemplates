@@ -56,16 +56,16 @@ jobs:
                 --configuration $(BuildConfiguration)
                 --framework ${{ parameters.framework }}
                 -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
-              publishTestResults: true
+              publishTestResults: false
             continueOnError: true
 
-          #- task: PublishTestResults@2
-          #  displayName: "Testergebnisse veröffentlichen"
-          #  inputs:
-          #    testResultsFormat: "VSTest"
-          #    testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
-          #    mergeTestResults: true
-          #    failTaskOnFailedTests: true
+          - task: PublishTestResults@2
+            displayName: "Testergebnisse veröffentlichen"
+            inputs:
+              testResultsFormat: "VSTest"
+              testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
+              mergeTestResults: true
+              failTaskOnFailedTests: true
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
