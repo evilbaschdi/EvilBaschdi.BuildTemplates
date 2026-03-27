@@ -54,7 +54,7 @@ jobs:
         continueOnError: true
 
       - task: PublishTestResults@2
-        displayName: "Testergebnisse veröffentlichen"
+        displayName: "publish test results"
         inputs:
           testResultsFormat: "VSTest"
           testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ parameters.projectName }}.trx"
@@ -72,7 +72,7 @@ jobs:
           modifyOutputPath: true
 
       - task: reportgenerator@5
-        displayName: "Code Coverage veröffentlichen"
+        displayName: "publish code coverage results"
         inputs:
           reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
           targetdir: "$(Agent.TempDirectory)/CoverageReport"
@@ -80,7 +80,7 @@ jobs:
           publishCodeCoverageResults: true
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: ZipArchive"
+        displayName: "publish build artifacts"
         inputs:
           ArtifactName: "ZipArchive"
         condition: succeededOrFailed()

@@ -60,7 +60,7 @@ jobs:
             continueOnError: true
 
           - task: PublishTestResults@2
-            displayName: "Testergebnisse veröffentlichen"
+            displayName: "publish test results"
             inputs:
               testResultsFormat: "VSTest"
               testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
@@ -86,7 +86,7 @@ jobs:
             condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
       - task: reportgenerator@5
-        displayName: "Publish CodeCoverage Results"
+        displayName: "publish code coverage results"
         inputs:
           reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
           targetdir: "$(Agent.TempDirectory)/CoverageReport"
@@ -94,7 +94,7 @@ jobs:
           publishCodeCoverageResults: true
 
       - task: PublishBuildArtifacts@1
-        displayName: "Publish Artifact: $(Build.SourceBranchName)"
+        displayName: "publish build artifacts"
         inputs:
           ArtifactName: "$(Build.SourceBranchName)"
         condition: succeededOrFailed()
