@@ -55,17 +55,18 @@ jobs:
               arguments: >
                 --configuration $(BuildConfiguration)
                 --framework ${{ parameters.framework }}
-                -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
+                -p:TestingPlatformDotnetTestSupport=true
+              #  -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
               publishTestResults: false
             continueOnError: true
 
-          - task: PublishTestResults@2
-            displayName: "publish test results"
-            inputs:
-              testResultsFormat: "VSTest"
-              testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
-              mergeTestResults: true
-              failTaskOnFailedTests: false
+          # - task: PublishTestResults@2
+          #   displayName: "publish test results"
+          #   inputs:
+          #     testResultsFormat: "VSTest"
+          #     testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
+          #     mergeTestResults: true
+          #     failTaskOnFailedTests: false
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
@@ -85,14 +86,14 @@ jobs:
               arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
             condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-      - task: reportgenerator@5
-        displayName: "publish code coverage results"
-        inputs:
-          reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
-          targetdir: "$(Agent.TempDirectory)/CoverageReport"
-          reporttypes: "HtmlInline_AzurePipelines;Cobertura"
-          publishCodeCoverageResults: true
-        continueOnError: true
+      # - task: reportgenerator@5
+      #   displayName: "publish code coverage results"
+      #   inputs:
+      #     reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
+      #     targetdir: "$(Agent.TempDirectory)/CoverageReport"
+      #     reporttypes: "HtmlInline_AzurePipelines;Cobertura"
+      #     publishCodeCoverageResults: true
+      #   continueOnError: true
 
       - task: PublishBuildArtifacts@1
         displayName: "publish build artifacts"

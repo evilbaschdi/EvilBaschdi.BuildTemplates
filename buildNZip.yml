@@ -49,6 +49,7 @@ jobs:
           arguments: >
             --configuration $(BuildConfiguration)
             --framework ${{ parameters.framework }}
+            -p:TestingPlatformDotnetTestSupport=true
             -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ parameters.projectName }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ parameters.projectName }}.cobertura.xml"
           publishTestResults: false
         continueOnError: true
