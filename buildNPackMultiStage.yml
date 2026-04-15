@@ -24,7 +24,7 @@ stages:
         parameters:
           projects: ${{ parameters.projects }}
           framework: ${{ parameters.framework }}
-          projectParentDirectory: ${{ parameters.projectsParentDirectory }}
+          projectsParentDirectory: ${{ parameters.projectsParentDirectory }}
           testsParentDirectory: ${{ parameters.testsParentDirectory }}
 
   - stage: Deploy
