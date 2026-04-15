@@ -41,7 +41,7 @@ jobs:
               command: restore
               projects: ${{ parameters.projectsParentDirectory }}${{ project }}/${{ project }}.csproj
               feedsToUse: config
-              nugetConfigPath: NuGet.config
+              nugetConfigPath: $(Build.SourcesDirectory)/NuGet.config
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet build ${{ project }}"
