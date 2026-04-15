@@ -11,7 +11,9 @@ parameters:
       - net9.0-windows
       - net10.0
       - net10.0-windows
-  - name: "projectParentDirectory"
+  - name: "projectsParentDirectory"
+    type: string
+  - name: "testsParentDirectory"
     type: string
 
 jobs:
@@ -37,21 +39,21 @@ jobs:
             displayName: "dotnet restore ${{ project }}"
             inputs:
               command: restore
-              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              projects: ${{ parameters.projectsParentDirectory }}${{ project }}/${{ project }}.csproj
               feedsToUse: config
-              nugetConfigPath: ${{ parameters.projectParentDirectory }}NuGet.config
+              nugetConfigPath: ${{ parameters.projectsParentDirectory }}NuGet.config
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet build ${{ project }}"
             inputs:
-              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              projects: ${{ parameters.projectsParentDirectory }}${{ project }}/${{ project }}.csproj
               arguments: "--configuration $(BuildConfiguration)"
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet test ${{ project }}"
             inputs:
               command: test
-              projects: ${{ parameters.projectParentDirectory }}${{ project }}.Tests/${{ project }}.Tests.csproj
+              projects: ${{ parameters.testsParentDirectory }}${{ project }}.Tests/${{ project }}.Tests.csproj
               arguments: >
                 --configuration $(BuildConfiguration)
                 --framework ${{ parameters.framework }}
@@ -72,7 +74,7 @@ jobs:
             displayName: "dotnet custom pack release"
             inputs:
               command: custom
-              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              projects: ${{ parameters.projectsParentDirectory }}${{ project }}/${{ project }}.csproj
               custom: pack
               arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build"
             condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
@@ -81,7 +83,7 @@ jobs:
             displayName: "dotnet custom pack preview"
             inputs:
               command: custom
-              projects: ${{ parameters.projectParentDirectory }}${{ project }}/${{ project }}.csproj
+              projects: ${{ parameters.projectsParentDirectory }}${{ project }}/${{ project }}.csproj
               custom: pack
               arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
             condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
