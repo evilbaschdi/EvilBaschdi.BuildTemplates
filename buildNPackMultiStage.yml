@@ -5,10 +5,6 @@ parameters:
   - name: "framework"
     type: string
     values:
-      - net8.0
-      - net8.0-windows
-      - net9.0
-      - net9.0-windows
       - net10.0
       - net10.0-windows
   - name: "projectsParentDirectory"
