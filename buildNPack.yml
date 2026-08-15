@@ -56,16 +56,16 @@ jobs:
                 --coverage
                 --coverage-output-format cobertura
                 --coverage-output "$(Agent.TempDirectory)/TestResults/${{ project }}/coverage.cobertura.xml"
-              publishTestResults: false
+              publishTestResults: true
             continueOnError: true
 
-          - task: PublishCodeCoverageResults@2
-            displayName: "publish code coverage ${{ project }}"
-            inputs:
-              summaryFileLocation: "$(Agent.TempDirectory)/TestResults/${{ project }}/**/coverage.cobertura.xml"
-              reportDirectory: "$(Agent.TempDirectory)/TestResults/${{ project }}"
-              failIfCoverageEmpty: false
-            continueOnError: true
+          # - task: PublishCodeCoverageResults@2
+          #   displayName: "publish code coverage ${{ project }}"
+          #   inputs:
+          #     summaryFileLocation: "$(Agent.TempDirectory)/TestResults/${{ project }}/**/coverage.cobertura.xml"
+          #     reportDirectory: "$(Agent.TempDirectory)/TestResults/${{ project }}"
+          #     failIfCoverageEmpty: false
+          #   continueOnError: true
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
