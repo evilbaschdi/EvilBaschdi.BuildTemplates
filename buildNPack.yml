@@ -54,18 +54,17 @@ jobs:
                 --configuration $(BuildConfiguration)
                 --framework ${{ parameters.framework }}
                 -p:TestingPlatformDotnetTestSupport=true
-                --collect:"XPlat Code Coverage"
-                --results-directory "$(Agent.TempDirectory)/TestResults/${{ project }}"
+              #  -p:TestingPlatformCommandLineArguments="--report-trx --report-trx-filename ${{ project }}.trx --results-directory $(Agent.TempDirectory)/TestResults --coverage --coverage-output-format cobertura --coverage-output ${{ project }}.cobertura.xml"
               publishTestResults: false
             continueOnError: true
 
-          - task: PublishCodeCoverageResults@2
-            displayName: "publish code coverage ${{ project }}"
-            inputs:
-              summaryFileLocation: "$(Agent.TempDirectory)/TestResults/${{ project }}/**/coverage.cobertura.xml"
-              reportDirectory: "$(Agent.TempDirectory)/TestResults/${{ project }}"
-              failIfCoverageEmpty: false
-            continueOnError: true
+          # - task: PublishTestResults@2
+          #   displayName: "publish test results"
+          #   inputs:
+          #     testResultsFormat: "VSTest"
+          #     testResultsFiles: "$(Agent.TempDirectory)/TestResults/${{ project }}.trx"
+          #     mergeTestResults: true
+          #     failTaskOnFailedTests: false
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
@@ -84,6 +83,15 @@ jobs:
               custom: pack
               arguments: "-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build --version-suffix $(Build.SourceBranchName)"
             condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+      # - task: reportgenerator@5
+      #   displayName: "publish code coverage results"
+      #   inputs:
+      #     reports: "$(Agent.TempDirectory)/TestResults/*.cobertura.xml"
+      #     targetdir: "$(Agent.TempDirectory)/CoverageReport"
+      #     reporttypes: "HtmlInline_AzurePipelines;Cobertura"
+      #     publishCodeCoverageResults: true
+      #   continueOnError: true
 
       - task: PublishBuildArtifacts@1
         displayName: "publish build artifacts"
