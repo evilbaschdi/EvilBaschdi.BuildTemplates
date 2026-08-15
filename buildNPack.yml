@@ -59,13 +59,21 @@ jobs:
               publishTestResults: true
             continueOnError: true
 
-          # - task: PublishCodeCoverageResults@2
-          #   displayName: "publish code coverage ${{ project }}"
-          #   inputs:
-          #     summaryFileLocation: "$(Agent.TempDirectory)/TestResults/${{ project }}/**/coverage.cobertura.xml"
-          #     reportDirectory: "$(Agent.TempDirectory)/TestResults/${{ project }}"
-          #     failIfCoverageEmpty: false
-          #   continueOnError: true
+          - task: reportgenerator@5
+            displayName: "generate coverage report ${{ project }}"
+            inputs:
+              reports: "$(Agent.TempDirectory)/TestResults/${{ project }}/coverage.cobertura.xml"
+              targetdir: "$(Agent.TempDirectory)/CoverageReport/${{ project }}"
+              reporttypes: "HtmlInline_AzurePipelines;Cobertura"
+            continueOnError: true
+
+          - task: PublishCodeCoverageResults@2
+            displayName: "publish code coverage ${{ project }}"
+            inputs:
+              summaryFileLocation: "$(Agent.TempDirectory)/TestResults/${{ project }}/coverage.cobertura.xml"
+              reportDirectory: "$(Agent.TempDirectory)/CoverageReport/${{ project }}"
+              failIfCoverageEmpty: false
+            continueOnError: true
 
           - task: DotNetCoreCLI@2
             displayName: "dotnet custom pack release"
