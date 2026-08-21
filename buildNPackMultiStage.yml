@@ -24,7 +24,7 @@ stages:
           testsParentDirectory: ${{ parameters.testsParentDirectory }}
 
   - stage: Deploy
-   displayName: "Deploy ${{ replace(variables['Build.SourceBranch'], 'refs/heads/', '') }}"
-   dependsOn: Build
-   jobs:
-     - template: pushNuget.yml
+    displayName: "Deploy ${{ replace(variables['Build.SourceBranch'], 'refs/heads/', '') }}"
+    dependsOn: Build
+    jobs:
+      - template: pushNuget.yml
